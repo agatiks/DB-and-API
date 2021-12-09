@@ -1,28 +1,22 @@
 package com.example.lab7_api
 
 
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.*
 
 interface PostAPIService {
-    @GET("users/{user}/posts")
-    fun listPosts(
-        @Path("user") user: Int
-    ): Call<List<Post>>
+    @GET("posts")
+    suspend fun listPosts(): List<Post>
 
-    @POST("users/{user}/posts")
-    fun makePost(
-        @Path("user") user: Int,
-        /*@Query("userId") userId: String,
-        @Query("id") id: String,*/
-        @Query("title") title: String,
-        @Query("body") body: String
-    ): Call<Post>
+    @POST("posts")
+    suspend fun makePost(
+        @Body post: Post
+    ): Response<ResponseBody>
 
-    @DELETE("users/{user}/posts")
-    fun deletePost(
-            @Path("user") user: Int,
-            @Query("id") id: Int
-    ): Call<Post>
+    @DELETE("posts")
+    suspend fun deletePost(
+            @Query("id") id: String
+    ): Response<ResponseBody>
 }

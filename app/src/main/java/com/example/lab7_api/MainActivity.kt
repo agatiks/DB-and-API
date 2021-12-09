@@ -1,19 +1,15 @@
 package com.example.lab7_api
 
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.os.Parcelable
+import android.os.PersistableBundle
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.coroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.lab7_api.databinding.ActivityMainBinding
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
     private val userId: Int = 1
@@ -21,45 +17,50 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var postAdapter: PostListAdapter
     private lateinit var service: PostAPIService
+    private lateinit var listState: Parcelable
+    private val KEY_LIST = "list"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         service = APIApp.instance.service
-        val callPosts = service.listPosts(userId)
-
-        callPosts.enqueue(object: Callback<List<Post>> {
-            override fun onFailure(call: Call<List<Post>>, t: Throwable) {
-                Log.e("e", "Failed with", t)
+        lifecycle.coroutineScope.async {
+            postList = service.listPosts()
+            Toast.makeText(APIApp.instance, "got response", Toast.LENGTH_SHORT).show()
+            postAdapter = PostListAdapter(
+                this@MainActivity,
+                lifecycle.coroutineScope,
+                postList!!,
+                userId
+            )
+                val manager = LinearLayoutManager(this@MainActivity)
+                binding.postList.apply {
+                    layoutManager = manager
+                    adapter = postAdapter
+                }
+            binding.progressCircular.visibility = View.GONE
+        }
+        binding.addButton.setOnClickListener{
+            lifecycle.coroutineScope.async {
+                val result = service.makePost(Post("Hello", "It's my post"))
+                Toast.makeText(
+                    APIApp.instance,
+                    "put post with ${result.code()}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-            override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
-                Toast.makeText(APIApp.instance, "got response", Toast.LENGTH_SHORT).show()
-                postList = response.body()
-                makePostList(postList!!) // обработать если пустой
-                /* Log.i("list", "${postList?.get(0)?.title}") */
-            }
-        })
-        binding.addButton.setOnClickListener{addPost()}
-    }
-
-    private fun addPost() {
-        val newPostCall = service.makePost(userId, "Hello", "It's my post")
-        newPostCall.enqueue(object: Callback<Post> {
-            override fun onFailure(call: Call<Post>, t: Throwable) {
-                Log.e("e", "Failed with", t)
-            }
-            override fun onResponse(call: Call<Post>, response: Response<Post>) {
-                Toast.makeText(APIApp.instance, "put post with ${response.code()}", Toast.LENGTH_SHORT).show()
-            }
-        })
-    }
-
-    private fun makePostList(list: List<Post>) {
-        postAdapter = PostListAdapter(this, list, userId)
-        val manager = LinearLayoutManager(this)
-        binding.postList.apply {
-            layoutManager = manager
-            adapter = postAdapter
         }
     }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        Toast.makeText(APIApp.instance, "${savedInstanceState.getString(KEY_LIST)}", Toast.LENGTH_SHORT).show()
+    }
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        val str = postList!![1].title
+        outState.putString(KEY_LIST, str)
+        super.onSaveInstanceState(outState, outPersistentState)
+    }
+
 }
