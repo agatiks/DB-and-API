@@ -1,4 +1,4 @@
-package com.example.lab7_api
+package com.example.lab8_db
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

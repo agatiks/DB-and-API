@@ -1,18 +1,14 @@
-package com.example.lab7_api
+package com.example.lab8_db
 
 import android.app.Application
-import android.app.Service
-import com.example.lab7_api.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import androidx.room.Room
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.converter.moshi.MoshiConverterFactory
 
 class APIApp: Application() {
     lateinit var service: PostAPIService
+        private set
+    lateinit var database: Dao
         private set
     override fun onCreate() {
         super.onCreate()
@@ -22,6 +18,8 @@ class APIApp: Application() {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         service = retrofit.create(PostAPIService::class.java)
+        database = Room.databaseBuilder(this,
+            PostDatabase::class.java, "db").build().dao()
     }
     companion object {
         lateinit var instance: APIApp
