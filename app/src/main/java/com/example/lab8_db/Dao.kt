@@ -12,8 +12,14 @@ interface Dao {
     fun getAllPosts(): Flow<List<Post>>
     @Query("DELETE FROM post")
     suspend fun clear()
+    @Query("SELECT * FROM post")
+    suspend fun allRecords(): List<Post>
     @Insert
     suspend fun insertAll(posts: List<Post>)
     @Delete
     suspend fun deletePost(post: Post)
+
+    suspend fun countRecords(): Int {
+        return allRecords().size
+    }
 }

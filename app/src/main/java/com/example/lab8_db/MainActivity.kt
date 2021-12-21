@@ -1,5 +1,8 @@
 package com.example.lab8_db
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.content.SharedPreferences.Editor
 import android.opengl.Visibility
 import android.os.Bundle
 import android.os.Parcelable
@@ -18,9 +21,10 @@ import kotlinx.coroutines.flow.collect
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var postAdapter: PostListAdapter
-    private var cnt = 0
+    private lateinit var shp: SharedPreferences
     private lateinit var db: Dao
     private val KEY_LIST = "list"
+    private val KEY_CNT = "cnt"
     companion object {
         private const val TAG = "MainActivity"
     }
@@ -49,15 +53,13 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.async {
                 upd()
             }
-            cnt = postAdapter.postList.size
         }
         binding.addButton.setOnClickListener{
             lifecycleScope.async {
-                val post = Post(cnt, "Hello", "It's my post")
+                val post = Post(db.allRecords().last().id + 1, "Hello", "It's my post")
                 Log.i("post_id", "${post.id}")
                 db.insertAll(listOf(post))
             }
-            cnt++
         }
     }
 
@@ -73,6 +75,5 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.async {
             db.deletePost(post)
         }
-        cnt--
     }
 }
